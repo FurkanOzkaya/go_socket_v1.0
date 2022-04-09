@@ -21,17 +21,13 @@ type ConnectionModel struct {
 }
 
 type Pool struct {
-	CONNECT    chan *ConnectionModel
-	MESSAGE    chan *ConnectionModel
-	DISCONNECT chan *ConnectionModel
+	Operation    chan *ConnectionModel
 	Clients map[string]*websocket.Conn
 }
 
 func NewPool() *Pool {
 	return &Pool{
-		CONNECT:    make(chan *ConnectionModel),
-		MESSAGE:    make(chan *ConnectionModel),
-		DISCONNECT: make(chan *ConnectionModel),
+		Operation:    make(chan *ConnectionModel),
 		Clients:  make(map[string]*websocket.Conn),
 	}
 }
@@ -39,8 +35,9 @@ func NewPool() *Pool {
 func (pool *Pool) Start() {
 
 	for {
-		select {
-		case client := <-pool.CONNECT:
+		client := <-pool.Operation
+		switch client.Operation{
+		case CONNECT:
 			log.Println(client, " is appending to Map of users")
 			if pool.Clients == nil {
 			    pool.Clients = make(map[string]*websocket.Conn)
@@ -48,13 +45,13 @@ func (pool *Pool) Start() {
 			pool.Clients[client.User] = client.Conn
 			send_msg := ConnectionModel{Operation: CONNECT, Message: "success"}
 			go sendMessage(client.Conn, client.MessageType, send_msg)
-		case client := <-pool.MESSAGE:
+		case MESSAGE:
 			log.Println("[Start] pool.MESSAGE chan to message sendMessage")
 			log.Println(client)
 			targetUser := pool.Clients[client.To]
 			//sendMsg := ConnectionModel{Operation: MESSAGE, From: client.From, Message: client.Message}
 			go sendMessage(targetUser, client.MessageType, *client)
-		case client := <-pool.DISCONNECT:
+		case DISCONNECT:
 			log.Println(client)
 			delete(pool.Clients, client.User)
 			send_msg :=ConnectionModel{Operation: DISCONNECT, Message: "success"}

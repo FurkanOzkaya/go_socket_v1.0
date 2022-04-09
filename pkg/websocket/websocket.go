@@ -50,18 +50,18 @@ func Reader(pool *Pool, ws *websocket.Conn) {
 				log.Println(wsmessage.User, " is appending to Map of users")
 				wsmessage.Conn = ws
 				wsmessage.MessageType = MessageType
-				pool.CONNECT <- &wsmessage
+				pool.Operation <- &wsmessage
 			case wsmessage.Operation == MESSAGE:
 				log.Println("[Reader] Message Send")
 				log.Println(wsmessage)
 				wsmessage.Conn = ws
 				wsmessage.MessageType = MessageType
-				pool.MESSAGE <- &wsmessage
+				pool.Operation <- &wsmessage
 			case wsmessage.Operation == DISCONNECT:
 				wsmessage.Conn = ws
 				wsmessage.MessageType = MessageType
 				log.Println(wsmessage)
-				pool.DISCONNECT <- &wsmessage
+				pool.Operation <- &wsmessage
 			default:
 				log.Println("Wrong Operation Type")
 		}
