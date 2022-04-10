@@ -9,12 +9,12 @@ import (
 
 
 type ConnectionModel struct {
-	Operation string `json:"operation"`
-	User      string `json:"user"`
-	From      string `json:"from"`
-	To        string `json:"to"`
-	Message   string `json:"message"`
-	Conn	 *websocket.Conn
+	Operation string `json:"operation,omitempty"`
+	User      string `json:"user,omitempty"`
+	From      string `json:"from,omitempty"`
+	To        string `json:"to,omitempty"`
+	Message   string `json:"message,omitempty"`
+	Conn	 *websocket.Conn `json:"conn,omitempty"`
 }
 
 type Pool struct {
