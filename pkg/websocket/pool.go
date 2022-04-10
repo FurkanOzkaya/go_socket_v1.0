@@ -1,8 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
 
 	"github.com/gorilla/websocket"
@@ -17,7 +15,6 @@ type ConnectionModel struct {
 	To        string `json:"to"`
 	Message   string `json:"message"`
 	Conn	 *websocket.Conn
-	MessageType int `json:"message_type"`
 }
 
 type Pool struct {
@@ -38,35 +35,30 @@ func (pool *Pool) Start() {
 		client := <-pool.Operation
 		switch client.Operation{
 		case CONNECT:
-			log.Println(client, " is appending to Map of users")
 			if pool.Clients == nil {
 			    pool.Clients = make(map[string]*websocket.Conn)
 			}
 			pool.Clients[client.User] = client.Conn
 			send_msg := ConnectionModel{Operation: CONNECT, Message: "success"}
-			go sendMessage(client.Conn, client.MessageType, send_msg)
+			go sendMessage(client.Conn, send_msg)
 		case MESSAGE:
 			log.Println("[Start] pool.MESSAGE chan to message sendMessage")
 			log.Println(client)
 			targetUser := pool.Clients[client.To]
-			//sendMsg := ConnectionModel{Operation: MESSAGE, From: client.From, Message: client.Message}
-			go sendMessage(targetUser, client.MessageType, *client)
+			//sendMsg := ConnectionModel{Operation: MESSAGE, From: client.From, To: client.To, Message: client.Message}
+			go sendMessage(targetUser,  *client)
 		case DISCONNECT:
 			log.Println(client)
 			delete(pool.Clients, client.User)
 			send_msg :=ConnectionModel{Operation: DISCONNECT, Message: "success"}
-			go sendMessage(client.Conn, client.MessageType, send_msg)
+			go sendMessage(client.Conn,  send_msg)
 
 		}
 	}
 }
 
-func sendMessage(conn *websocket.Conn,messageType int, msg ConnectionModel){
-	newMsg, err := json.Marshal(msg)
-    if err != nil {
-        fmt.Println(err)
-    }
-    if err := conn.WriteMessage(messageType, []byte(newMsg)); err != nil {
+func sendMessage(conn *websocket.Conn, msg ConnectionModel){
+    if err := conn.WriteJSON(msg); err != nil {
         log.Println(err)
         return
     }

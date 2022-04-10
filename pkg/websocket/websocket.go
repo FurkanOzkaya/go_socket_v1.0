@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -36,36 +35,31 @@ const (
 
 func Reader(pool *Pool, ws *websocket.Conn) {
 	for {
-		MessageType, message, err := ws.ReadMessage()
+		var wsmessage ConnectionModel
+		err := ws.ReadJSON(&wsmessage)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		var wsmessage ConnectionModel
-        if err := json.Unmarshal(message, &wsmessage); err != nil {
-            panic(err)
-        }
+		
 		switch {
 			case wsmessage.Operation == CONNECT:
 				log.Println(wsmessage.User, " is appending to Map of users")
 				wsmessage.Conn = ws
-				wsmessage.MessageType = MessageType
 				pool.Operation <- &wsmessage
 			case wsmessage.Operation == MESSAGE:
 				log.Println("[Reader] Message Send")
 				log.Println(wsmessage)
 				wsmessage.Conn = ws
-				wsmessage.MessageType = MessageType
 				pool.Operation <- &wsmessage
 			case wsmessage.Operation == DISCONNECT:
 				wsmessage.Conn = ws
-				wsmessage.MessageType = MessageType
 				log.Println(wsmessage)
 				pool.Operation <- &wsmessage
 			default:
 				log.Println("Wrong Operation Type")
 		}
-		fmt.Printf("Message Received: %+v\n", message)
+		fmt.Printf("Message Received: %+v\n", wsmessage)
 
 	}
 }
