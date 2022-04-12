@@ -25,12 +25,10 @@ func Upgrade(w http.ResponseWriter, r *http.Request) (*websocket.Conn, error) {
 	return conn, nil
 }
 
-
-
 const (
-    CONNECT string   = "connect"
-    MESSAGE  string       = "message"
-    DISCONNECT string    = "disconnect"
+	CONNECT    string = "connect"
+	MESSAGE    string = "message"
+	DISCONNECT string = "disconnect"
 )
 
 func Reader(pool *Pool, ws *websocket.Conn) {
@@ -41,24 +39,13 @@ func Reader(pool *Pool, ws *websocket.Conn) {
 			log.Println(err)
 			return
 		}
-		
-		switch {
-			case wsmessage.Operation == CONNECT:
-				log.Println(wsmessage.User, " is appending to Map of users")
-				wsmessage.Conn = ws
-				pool.Operation <- &wsmessage
-			case wsmessage.Operation == MESSAGE:
-				log.Println("[Reader] Message Send")
-				log.Println(wsmessage)
-				wsmessage.Conn = ws
-				pool.Operation <- &wsmessage
-			case wsmessage.Operation == DISCONNECT:
-				wsmessage.Conn = ws
-				log.Println(wsmessage)
-				pool.Operation <- &wsmessage
-			default:
-				log.Println("Wrong Operation Type")
+		if wsmessage.Operation == CONNECT || wsmessage.Operation == MESSAGE || wsmessage.Operation == DISCONNECT {
+			wsmessage.Conn = ws
+			pool.Operation <- &wsmessage
+		} else {
+			log.Println("Wrong Operation Type")
 		}
+
 		fmt.Printf("Message Received: %+v\n", wsmessage)
 
 	}
