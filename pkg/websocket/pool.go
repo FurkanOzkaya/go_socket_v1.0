@@ -9,10 +9,12 @@ import (
 type ConnectionModel struct {
 	Operation   string          `json:"operation,omitempty"`
 	MessageType string          `json:"message_type,omitempty"`
+	MessageId   string          `json:"message_id,omitempty"`
 	User        string          `json:"user,omitempty"`
 	From        string          `json:"from,omitempty"`
 	To          string          `json:"to,omitempty"`
 	Message     string          `json:"message,omitempty"`
+	Status      string          `json:"status,omitempty"`
 	Conn        *websocket.Conn `json:"conn,omitempty"`
 }
 
@@ -50,6 +52,17 @@ func (pool *Pool) Start() {
 
 				//targetUser := pool.Clients[client.To]
 				//sendMsg := ConnectionModel{Operation: MESSAGE, From: client.From, To: client.To, Message: client.Message}
+				go sendMessage(targetUser, *client)
+			} else {
+				log.Println("Target User Not Found in System")
+			}
+		case STATUS:
+			log.Println("[Start] pool.STATUS chan to message sendMessage")
+			log.Println(client)
+			value, ok := pool.Clients[client.To]
+			var targetUser *websocket.Conn
+			if ok {
+				targetUser = value
 				go sendMessage(targetUser, *client)
 			} else {
 				log.Println("Target User Not Found in System")

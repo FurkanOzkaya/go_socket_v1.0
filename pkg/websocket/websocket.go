@@ -29,6 +29,7 @@ const (
 	CONNECT    string = "connect"
 	MESSAGE    string = "message"
 	DISCONNECT string = "disconnect"
+	STATUS     string = "status"
 )
 
 func Reader(pool *Pool, ws *websocket.Conn) {
@@ -39,7 +40,7 @@ func Reader(pool *Pool, ws *websocket.Conn) {
 			log.Println(err)
 			return
 		}
-		if wsmessage.Operation == CONNECT || wsmessage.Operation == MESSAGE || wsmessage.Operation == DISCONNECT {
+		if wsmessage.Operation == CONNECT || wsmessage.Operation == MESSAGE || wsmessage.Operation == DISCONNECT || wsmessage.Operation == STATUS {
 			wsmessage.Conn = ws
 			pool.Operation <- &wsmessage
 		} else {
